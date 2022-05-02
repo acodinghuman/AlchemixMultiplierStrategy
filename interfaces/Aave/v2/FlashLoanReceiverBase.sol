@@ -2,7 +2,7 @@
 // Some path modifications
 // Solidity version change
 // Constructor public modifier removed
-pragma solidity 0.8.0;
+pragma solidity >0.6.12;
 
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';

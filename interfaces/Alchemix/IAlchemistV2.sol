@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0;
+pragma solidity >=0.8.4;
 
 import "./alchemist/IAlchemistV2Actions.sol";
 import "./alchemist/IAlchemistV2AdminActions.sol";

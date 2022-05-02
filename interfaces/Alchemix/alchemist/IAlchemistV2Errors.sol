@@ -1,4 +1,5 @@
-pragma solidity >=0.5.0;
+// Solidity version change
+pragma solidity >=0.8.4;
 
 /// @title  IAlchemistV2Errors
 /// @author Alchemix Finance
