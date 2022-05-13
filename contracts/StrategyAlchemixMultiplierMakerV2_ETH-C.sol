@@ -11,8 +11,9 @@ import "../interfaces/Alchemix/IAlchemistV2.sol";
 import "../interfaces/Curve/ICurvePool.sol";
 import "../interfaces/Curve/ICurveMetaPool.sol";
 import "../interfaces/Curve/ICurveMetaPoolFactory.sol";
+import "./tempconsole.sol";
 
-contract Strategy is FlashLoanReceiverBase {
+contract StrategyAlchemixMultiplierMakerV2_ETH_C is FlashLoanReceiverBase {
 
   using SafeMath for uint256;
   
@@ -70,26 +71,48 @@ contract Strategy is FlashLoanReceiverBase {
   {  
   // Depositing the flash loaned amount to Alchemix smart contract
   alchemist.deposit(daiContractAddress, amounts[0], address(this));
+  tempconsole.log("Alchemix deposit called");
+
+  // Half of the flash loaned amount
+  uint256 halfAmount = amounts[0].div(2);
 
   // Minting respective alchemix token for half of deposited amount
-  alchemist.mint(amounts[0].div(2), address(this));
+  alchemist.mint(halfAmount, address(this));
 
   // Gettinng the appropriate pool
   ICurveMetaPool pool = ICurveMetaPool(findTheAppropriteCurvePool(alusdAddress, daiContractAddress));
 
   // Required amount
   // TODO: Slippage should be decided about
-  uint256 requiredDaiAmount = amounts[0].div(2).mul(995).div(1000);
+  uint256 requiredDaiAmount = halfAmount.mul(995).div(1000);
 
   // Exchanging the minted token for Dai
   // alUSD index is 0
   // In 3crv, we have 0: Dai, 1: USDC, 2: Tether
-  pool.exchange_underlying(0, 0, amounts[0].div(2), requiredDaiAmount);
+  uint256 converted = pool.exchange_underlying(0, 0, halfAmount, requiredDaiAmount);
 
-  // TODO: To be continued from here
+  // Finding out how much remained which we should return to close flash loan successfully 
+  uint256 notConverted = halfAmount - converted;
+
+  // liquidating the not converted amount + fee
+  uint256 amountToLiquidate = notConverted + premiums[0];
+  alchemist.liquidate(daiContractAddress, amountToLiquidate, amountToLiquidate);
+
+  // Withdrawing the Dai
+  alchemist.withdraw(daiContractAddress, amountToLiquidate, address(this));
+
+  // Approving Dai for Aave
+  approveDaiForLendingPool(amounts[0]);
   
   // Dummy return 
   return true;
+  }
+
+  function approveDaiForLendingPool(uint256 amount) internal
+  {
+    address lendingPoolAddress = address(LENDING_POOL);
+    IERC20 daiContract = IERC20(daiContractAddress);
+    daiContract.approve(lendingPoolAddress, amount);
   }
 
   function findTheAppropriteCurvePool(address sourceTokenAddress, address destinationTokenAddress) internal view returns (address)
