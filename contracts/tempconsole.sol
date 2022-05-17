@@ -10,5 +10,9 @@ library tempconsole {
    function log(string memory message) external view {
         console.log(message);
         }
+
+   function log(string memory message, uint256 num) external view {
+        console.log(message, num);
+        }
 }
 
