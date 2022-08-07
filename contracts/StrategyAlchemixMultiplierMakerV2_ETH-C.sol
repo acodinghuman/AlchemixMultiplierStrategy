@@ -329,6 +329,9 @@ contract StrategyAlchemixMultiplierMakerV2_ETH_C is FlashLoanReceiverBase {
      * @return The amount in `want` of `_amtInWei` converted to `want`
      **/
     function ethToWant(uint256 _amtInWei) public view returns (uint256) {
+        // As of 26 June 2022 about 121.4 milion ETHs are mined, which is about 121.4 * 10^6 * 10^18 Wei or 121.4 * 10^24 Wei
+        // This consumes about 86.65 bits and is far from 128 bits
+        // 128 bit limitation is for the function getQuoteAtTick
         require(
             _amtInWei <= type(uint128).max,
             "Input values larger than uint128.max are not currently supported."
@@ -382,6 +385,15 @@ contract StrategyAlchemixMultiplierMakerV2_ETH_C is FlashLoanReceiverBase {
         );
 
         return amountOut;
+    }
+
+    // ToDo: After BaseStrategy Inheritance override should be added
+    function protectedTokens() internal view returns (address[] memory) {
+        address[] memory protected = new address[](3);
+        protected[0] = daiContractAddress;
+        protected[1] = ydaiContractAddress;
+        protected[3] = alusdAddress;
+        return protected;
     }
 
     // ToDo: The folowing functions should be removed when BaseStrategy implementation is finished
